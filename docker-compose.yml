@@ -71,7 +71,7 @@ services:
      - MYSQL_DBUSER=owncloud
      - ADMIN=sysop
      - ADMINPASS=sysop
-     - TRUSTED_DOMAIN1=owncloud
+     - TRUSTED_DOMAIN1=nextcloud
      - TRUSTED_DOMAIN2=${SERVER_NAME}
      - EXTERNAL_DOMAIN=${SERVER_NAME}
      - OVERWRITE_HOST=${SERVER_NAME}
