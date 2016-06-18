@@ -56,7 +56,7 @@ services:
     volumes:
      - /srv/volumes/mysql:/var/lib/mysql
     restart: always
-    domainname: tcmdsystems.eu
+    domainname: ${DOMAIN_NAME}
     networks:
      - proxy-tier
 
@@ -86,8 +86,8 @@ services:
 #   cpuset: 0,1
 #   mem_limit: 1024m
     volumes:
-     - /srv/volumes/config:/owncloud/config
-     - /srv/volumes/data:/owncloud/data
+     - /srv/volumes/config:/nextcloud/config
+     - /srv/volumes/data:/nextcloud/data
     restart: always
     domainname: ${DOMAIN_NAME}
     depends_on:
