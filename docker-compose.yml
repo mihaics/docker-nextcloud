@@ -1,0 +1,102 @@
+version: "2"
+services:
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/etc/nginx/conf.d"
+      - "/etc/nginx/vhost.d"
+      - "/usr/share/nginx/html"
+      - "/srv/volumes/proxy/certs:/etc/nginx/certs:ro"
+    restart: always
+    networks:
+      - proxy-tier
+
+  nginx-gen:
+    image: jwilder/docker-gen
+    container_name: nginx-gen
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - "/srv/volumes/proxy/templates/nginx-compose.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro"
+    volumes_from:
+      - nginx
+    entrypoint: /usr/local/bin/docker-gen -notify-sighup nginx -watch -only-exposed -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+    restart: always
+
+  letsencrypt-nginx-proxy-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: letsencrypt-nginx-proxy-companion
+    volumes_from:
+      - nginx
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/srv/volumes/proxy/certs:/etc/nginx/certs:rw"
+    environment:
+      - NGINX_DOCKER_GEN_CONTAINER=nginx-gen
+#      - ACME_CA_URI=https://acme-staging.api.letsencrypt.org/directory
+    restart: always
+
+  mysqldb:
+    container_name: mysql
+    image: mcsaky/sysop-mysql
+    expose:
+     - "3306/tcp"
+    environment:
+     - MYSQL_ROOT_PASSWORD=sysop
+     - MYSQL_DBNAME=owncloud
+     - MYSQL_DBPASS=owncloud
+     - MYSQL_DBUSER=owncloud
+     - CREATE_DATABASE=true
+#    cpu_shares: 50
+#    cpuset: 0,1
+#    mem_limit: 1024m
+    volumes:
+     - /srv/volumes/mysql:/var/lib/mysql
+    restart: always
+    domainname: tcmdsystems.eu
+    networks:
+     - proxy-tier
+
+  nextcloud:
+    container_name: nextcloud
+    image: mcsaky/nextcloud
+    expose:
+     - "80/tcp"
+    environment:
+     - MYSQL_DBNAME=owncloud
+     - MYSQL_DBPASS=owncloud
+     - MYSQL_DBUSER=owncloud
+     - ADMIN=sysop
+     - ADMINPASS=sysop
+     - TRUSTED_DOMAIN1=owncloud
+     - TRUSTED_DOMAIN2=${SERVER_NAME}
+     - EXTERNAL_DOMAIN=${SERVER_NAME}
+     - OVERWRITE_HOST=${SERVER_NAME}
+     - VIRTUAL_HOST=${SERVER_NAME}
+     - VIRTUAL_NETWORK=nginx-proxy
+     - VIRTUAL_PORT=80
+     - LETSENCRYPT_HOST=${SERVER_NAME}
+     - LETSENCRYPT_EMAIL=${EMAIL}
+    networks:
+     - proxy-tier
+#   cpu_shares: 50
+#   cpuset: 0,1
+#   mem_limit: 1024m
+    volumes:
+     - /srv/volumes/config:/owncloud/config
+     - /srv/volumes/data:/owncloud/data
+    restart: always
+    domainname: ${DOMAIN_NAME}
+    depends_on:
+     - mysqldb
+    links:
+     - mysqldb
+
+
+networks:
+  proxy-tier:
+    external:
+      name: nginx-proxy
