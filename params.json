@@ -1,0 +1,6 @@
+{
+  "name": "Docker-nextcloud",
+  "tagline": "docker-compose file for deploying nextcloud with mysql, nginx and letsencrypt",
+  "body": "# docker-nextcloud\r\nscripts to generate a full nextcloud stack with mysql, nginx, letsencrypt ready to use in production\r\n\r\ngit clone https://github.com/mihaics/docker-nextcloud.git\r\n\r\ncd docker-nextcloud\r\n\r\nedit install.sh and set DOMAIN_NAME, SERVER_NAME, EMAIL\r\n\r\nrun ./install.sh\r\n\r\n\r\nThis solution was inspired by Json Wilder's Blog and the examples found here: https://github.com/fatk/docker-letsencrypt-nginx-proxy-companion-examples.\r\n\r\n\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
